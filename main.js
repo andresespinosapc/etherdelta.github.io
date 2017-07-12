@@ -2,19 +2,11 @@
 /* global $, alertify, ga, EJS, google, web3 */
 /* eslint no-console: ["error", { allow: ["log"] }] */
 
-const getParameterByName = (nameIn, urlIn) => {
-  const url = urlIn || window.location.href;
-  const name = nameIn.replace(/[\[\]]/g, '\\$&'); // eslint-disable-line no-useless-escape
-  const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`);
-  const results = regex.exec(url);
-  if (!results) return null;
-  if (!results[2]) return '';
-  return decodeURIComponent(results[2].replace(/\+/g, ' '));
-};
+global.alertify = require('./js/alertify.min.js');
 
-const configName = getParameterByName('config');
+const NETWORK = 'mainnet';
 let config;
-if (configName === 'testnet') {
+if (NETWORK === 'testnet') {
   config = require('./config_testnet.js'); // eslint-disable-line global-require
 } else {
   config = require('./config.js'); // eslint-disable-line global-require
@@ -193,7 +185,7 @@ EtherDelta.prototype.alertTxResult = function alertTxResult(err, txsIn) {
       if (txs.findIndex(x => !x.txHash) < 0) {
         let message = 'You just created Ethereum transactions. Track their progress: <br />';
         txs.forEach((tx) => {
-          message += `<a href="https://${this.config.ethTestnet ? `${this.config.ethTestnet}.` : ''}etherscan.io/tx/${tx.txHash}" target="_blank">${tx.txHash}</a><br />`;
+          message += `<a href="https://${this.config.ethTestnet ? `${this.config.ethTestnet}.` : ''}etherscan.io/tx/${tx.txHash}" taro="_blank">${tx.txHash}</a><br />`;
         });
         this.dialogInfo(message);
       } else {
@@ -1074,6 +1066,7 @@ EtherDelta.prototype.displayOrderbook = function displayOrderbook(ordersIn, bloc
     { label: 'Cumulative bid size', type: 'number' },
     { label: 'Cumulative offer size', type: 'number' },
   ]);
+  console.log(sellOrders);
   // // top 25 bids and offers:
   // buyOrders = buyOrders.slice(0,25);
   // sellOrders = sellOrders.slice(-25);
@@ -2016,7 +2009,7 @@ EtherDelta.prototype.selectTokenAndBase = function selectTokenAndBase(tokenAddr,
 EtherDelta.prototype.setGasPrice = function setGasPrice(gasPrice) {
   if (gasPrice) {
     this.config.ethGasPrice = Number(gasPrice) * 1000000000;
-    this.minGas = (this.config.ethGasPrice * this.config.gasDeposit) / (10 ** 18);
+    this.minGas = (this.config.ethGasPrice * this.config.gasDeposit) / (Math.pow(10, 18));
   }
 };
 EtherDelta.prototype.displayBuySell = function displayBuySell(callback) {
@@ -2377,7 +2370,7 @@ EtherDelta.prototype.initContracts = function initContracts(callback) {
       this.dialogError('You are connected to the Ethereum testnet. Please connect to the Ethereum mainnet.');
     }
     this.config = config;
-    this.minGas = (this.config.ethGasPrice * this.config.gasDeposit) / (10 ** 18);
+    this.minGas = (this.config.ethGasPrice * this.config.gasDeposit) / (Math.pow(10, 18));
     if (Array.isArray(this.config.apiServer)) {
       this.config.apiServer = this.config.apiServer[
         Math.floor(Math.random() * this.config.apiServer.length)];

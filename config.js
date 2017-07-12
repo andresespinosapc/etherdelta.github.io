@@ -1,5 +1,7 @@
 /* eslint-env browser */
 
+let infuraToken = process.env.INFURA_TOKEN;
+
 module.exports = {
   homeURL: 'https://etherdelta.github.io',
   contractEtherDelta: 'smart_contract/etherdelta.sol',
@@ -13,7 +15,8 @@ module.exports = {
     { addr: '0xc6b330df38d6ef288c953f1f2835723531073ce2', info: 'Deployed 07/08/2016 -- please withdraw' },
   ],
   ethTestnet: false,
-  ethProvider: 'http://localhost:8545',
+  //ethProvider: 'http://localhost:8545',
+  ethProvider: 'https://mainnet.infura.io/' + infuraToken,
   ethGasPrice: 4000000000,
   ethAddr: '0x0000000000000000000000000000000000000000',
   ethAddrPrivateKey: '',

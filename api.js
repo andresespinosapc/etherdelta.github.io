@@ -17,6 +17,7 @@ API.init = function init(callback, allContracts, path, provider, configName, loo
     this.config = require('./config.js'); // eslint-disable-line global-require
   }
   this.utility = require('./common/utility.js')(this.config); // eslint-disable-line global-require
+  console.log('Configuration loaded');
 
   // web3
   this.web3 = new Web3();
@@ -25,6 +26,7 @@ API.init = function init(callback, allContracts, path, provider, configName, loo
     this.config.ethProvider = provider;
   }
   this.web3.setProvider(new this.web3.providers.HttpProvider(this.config.ethProvider));
+  console.log('Provider set');
 
   // check mainnet vs testnet
   this.web3.version.getNetwork((error, version) => {
@@ -39,6 +41,7 @@ API.init = function init(callback, allContracts, path, provider, configName, loo
     } catch (err) {
       this.web3.setProvider(undefined);
     }
+    console.log('Got network');
 
     // path
     if (path) {
@@ -68,6 +71,7 @@ API.init = function init(callback, allContracts, path, provider, configName, loo
     this.pricesCache = undefined;
     this.nonce = undefined;
 
+    console.log('Starting series');
     async.series(
       [
         (callbackSeries) => {
@@ -76,6 +80,7 @@ API.init = function init(callback, allContracts, path, provider, configName, loo
             this.config.contractEtherDelta,
             this.contractEtherDeltaAddrs[0],
             (err, contract) => {
+              console.log('Contract 1 loaded');
               this.contractEtherDelta = contract;
               callbackSeries(null, true);
             });
@@ -84,6 +89,7 @@ API.init = function init(callback, allContracts, path, provider, configName, loo
           this.utility.loadContract(this.web3, this.config.contractToken, this.config.ethAddr, (
             err,
             contract) => {
+              console.log('Contract 2 loaded');
             this.contractToken = contract;
             callbackSeries(null, true);
           });
@@ -112,6 +118,7 @@ API.init = function init(callback, allContracts, path, provider, configName, loo
         },
       ],
       () => {
+        console.log('Series completed');
         callback(null, {
           contractEtherDelta: this.contractEtherDelta,
           contractToken: this.contractToken,
@@ -290,26 +297,31 @@ API.getEtherDeltaBalance = function getEtherDeltaBalance(addr, callback) {
   }
 };
 
-API.getEtherDeltaTokenBalances = function getEtherDeltaTokenBalances(addr, callback) {
+API.getEtherDeltaTokenBalances = function getEtherDeltaTokenBalances(addr, tokens, callback) {
   if (addr.length === 42) {
     async.reduce(
       this.config.tokens,
       {},
       (memo, token, callbackReduce) => {
-        this.utility.call(
-          this.web3,
-          this.contractEtherDelta,
-          this.contractEtherDeltaAddrs[0],
-          'balanceOf',
-          [token.addr, addr],
-          (err, result) => {
-            if (!err) {
-              Object.assign(memo, { [token.name]: result.toNumber() });
-              callbackReduce(null, memo);
-            } else {
-              callbackReduce(null, memo);
-            }
-          });
+        if (tokens === null || tokens.indexOf(token.name) != -1) {
+          this.utility.call(
+            this.web3,
+            this.contractEtherDelta,
+            this.contractEtherDeltaAddrs[0],
+            'balanceOf',
+            [token.addr, addr],
+            (err, result) => {
+              if (!err) {
+                Object.assign(memo, { [token.name]: result.toNumber() });
+                callbackReduce(null, memo);
+              } else {
+                callbackReduce(null, memo);
+              }
+            });
+        }
+        else {
+          callbackReduce(null, memo);
+        }
       },
       (err, tokenBalances) => {
         callback(null, tokenBalances);
